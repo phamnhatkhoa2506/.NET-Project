@@ -1,0 +1,99 @@
+<?xml version="1.0" ?>
+<data>
+	<parenttype name="Popular Categories">
+		<childtype name="Quick and Easy"/>
+		<childtype name="Instant Pot"/>
+		<childtype name="Meal Prep"/>
+		<childtype name="Vegan"/>
+		<childtype name="Vegetarian"/>
+		<childtype name="Sugar-Free"/>
+		<childtype name="Pasta"/>
+		<childtype name="Tacos"/>
+		<childtype name="Bowls"/>
+		<childtype name="Soups"/>
+		<childtype name="Salads"/>
+		<childtype name="Dinner"/>
+		<childtype name="Most Popular"/>
+		<childtype name="All Recipes"/>
+	</parenttype>
+	<parenttype name="Recipes by Meal Type">
+		<childtype name="Breakfast"/>
+		<childtype name="Lunch"/>
+		<childtype name="Dinner"/>
+		<childtype name="Appetizer"/>
+		<childtype name="Snacks"/>
+		<childtype name="Desserts"/>
+		<childtype name="Drinks"/>
+	</parenttype>
+	<parenttype name="Recipes by Course">
+		<childtype name="Appetizer"/>
+		<childtype name="Soups"/>
+		<childtype name="Salads"/>
+		<childtype name="Sides"/>
+		<childtype name="Desserts"/>
+		<childtype name="Snacks"/>
+		<childtype name="Baking"/>
+		<childtype name="Sandwiches"/>
+		<childtype name="Main Dishes"/>
+	</parenttype>
+	<parenttype name="Recipes by Diet">
+		<childtype name="Dairy-Free"/>
+		<childtype name="Gluten-Free"/>
+		<childtype name="Healthy"/>
+		<childtype name="Sugar-Free"/>
+		<childtype name="Vegan"/>
+		<childtype name="Vegetarian"/>
+	</parenttype>
+	<parenttype name="Recipes by Season">
+		<childtype name="Spring"/>
+		<childtype name="Summer"/>
+		<childtype name="Fall"/>
+		<childtype name="Winter"/>
+	</parenttype>
+	<parenttype name="Recipes by Method">
+		<childtype name="Casserole"/>
+		<childtype name="Instant Pot"/>
+		<childtype name="Slow Cooker"/>
+		<childtype name="Sheet Pan"/>
+		<childtype name="Stovetop"/>
+	</parenttype>
+	<parenttype name="Recipes by Ingredient">
+		<childtype name="5 Ingredients"/>
+		<childtype name="Avocado"/>
+		<childtype name="Bacon"/>
+		<childtype name="Bell Pepper"/>
+		<childtype name="Berry"/>
+		<childtype name="Broccoli"/>
+		<childtype name="Carrot"/>
+		<childtype name="Cauliflower"/>
+		<childtype name="Chocolate"/>
+		<childtype name="Eggs"/>
+		<childtype name="Fish and Seafood"/>
+		<childtype name="Jalapeño"/>
+		<childtype name="Kale"/>
+		<childtype name="Legume"/>
+		<childtype name="Lemon"/>
+		<childtype name="Lime"/>
+		<childtype name="Meat and Chicken"/>
+		<childtype name="Mushroom"/>
+		<childtype name="Pasta"/>
+		<childtype name="Peanut Butter"/>
+		<childtype name="Pumpkin"/>
+		<childtype name="Quinoa"/>
+		<childtype name="Rice"/>
+		<childtype name="Salmon"/>
+		<childtype name="Spinach"/>
+		<childtype name="Sweet Potato"/>
+		<childtype name="Tofu"/>
+		<childtype name="Tomato"/>
+		<childtype name="Zucchini"/>
+	</parenttype>
+	<parenttype name="Recipes by Series">
+		<childtype name="Feeding a Broken Heart"/>
+		<childtype name="Holiday Series"/>
+		<childtype name="Plant-Powered January"/>
+		<childtype name="SOS Series"/>
+		<childtype name="The Soup Series"/>
+		<childtype name="Sugar Free January"/>
+	</parenttype>
+</data>

@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<recipe>
+	<parrenttype name="Popular Categories"/>
+	<childtype name="Quick and Easy"/>
+	<images>
+		<image url="https://pinchofyum.com/wp-content/uploads/Peanut-Chicken-Bowls-800x800.jpg"/>
+		<image url="https://pinchofyum.com/wp-content/uploads/Peanut-Chicken-Bowls-183x183.jpg"/>
+		<image url="https://pinchofyum.com/wp-content/uploads/Peanut-Chicken-Bowls-400x400.jpg"/>
+		<image url="https://pinchofyum.com/wp-content/uploads/Peanut-Chicken-Bowls-1200x1200.jpg"/>
+		<image url="https://pinchofyum.com/wp-content/uploads/Peanut-Chicken-Bowls-96x96.jpg"/>
+		<image url="https://pinchofyum.com/wp-content/uploads/Peanut-Chicken-Bowls-scaled-225x225.jpg"/>
+	</images>
+	<specifiedtype name=""/>
+	<title name="Thai Peanut Chicken Bowls"/>
+	<reviews quantity="11"/>
+	<avgstar average="4.8"/>
+	<headdescription>I love a shortcut dinner hack! These bowls feature caramelized peanut chicken, a tangle of vermicelli noodles, fresh herbs and cucumber salad, and peanut sauce all over top.</headdescription>
+	<structure>
+		<image>https://pinchofyum.com/wp-content/uploads/Peanut-Chicken-Bowls-scaled.jpg</image>
+		<questions>
+			<h2>Watch How To Make These Peanut Chicken Bowls</h2>
+		</questions>
+	</structure>
+	<createddate date="2025-01-15"/>
+</recipe>

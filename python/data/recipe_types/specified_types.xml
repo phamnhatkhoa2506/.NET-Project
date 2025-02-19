@@ -1,0 +1,104 @@
+<?xml version="1.0" ?>
+<specifiedtype>
+	<parenttpye name="Popular Categories">
+		<childtype name="Quick and Easy">
+			<specifiedtype>
+				<title>WEEKNIGHT RECIPES</title>
+				<description>Because it's already been A DAY! Here are some surefire gems to get dinner on the table fast.</description>
+				<recipes>
+					<recipe name="Shortcut Sesame Butter Noodles"/>
+					<recipe name="5 Ingredient Tomato Soup"/>
+					<recipe name="Trader Joe’s Sun-Dried Tomato Focaccia Turkey Sandwich"/>
+					<recipe name="Chili Crunch Tofu"/>
+					<recipe name="Salmon Tacos with Mango Corn Salsa"/>
+					<recipe name="Butter Chicken Meatballs"/>
+					<recipe name="Harissa Meatballs with Whipped Feta"/>
+					<recipe name="Black Pepper Stir Fried Udon"/>
+					<recipe name="Coconut Curry Salmon"/>
+					<recipe name="No-Boil Baked Penne with Meatballs"/>
+					<recipe name="Creamy Thai Sweet Potato Curry"/>
+					<recipe name="Sheet Pan Chicken Pitas with Tzatziki"/>
+					<recipe name="Creamy Kale Pasta"/>
+					<recipe name="Sheet Pan Jambalaya"/>
+					<recipe name="Baked Shrimp with Feta and Grilled Sourdough"/>
+					<recipe name="Yummy Salmon Burgers with Slaw"/>
+					<recipe name="Instant Pot Mac and Cheese"/>
+					<recipe name="Grilled Sausage and Peppers with Garlic Aioli"/>
+					<recipe name="Garlic Parmesan Shellbows"/>
+					<recipe name="Greek Baked Orzo"/>
+					<recipe name="Spicy Peanut Tofu Bowls"/>
+					<recipe name="Instant Pot Cauliflower Curry"/>
+					<recipe name="Spicy Shrimp Tacos with Garlic Cilantro Lime Slaw"/>
+					<recipe name="Easy Vegan Burrito Bowls"/>
+					<recipe name="Vegan Sheet Pan Fajitas with Chipotle Queso"/>
+					<recipe name="5 Ingredient Spicy Pork"/>
+					<recipe name="Instant Pot Coconut Tandoori-Inspired Chicken"/>
+					<recipe name="Best Anytime Baked Chicken Meatballs"/>
+					<recipe name="Vegan Mega-Burritos"/>
+					<recipe name="Avocado Kale Caesar Salad + Sweet Potato Fries"/>
+					<recipe name="Red Pepper Cashew Pasta with Roasted Cauliflower"/>
+					<recipe name="Cheater’s Power Salad"/>
+					<recipe name="Loaded Caprese Grilled Cheese"/>
+					<recipe name="5-Ingredient Green Curry"/>
+					<recipe name="15 Minute Lo Mein"/>
+					<recipe name="5 Ingredient Pumpkin Alfredo"/>
+					<recipe name="30 Minute Vegetarian Meatballs"/>
+					<recipe name="15-Minute Egg Roll in a Bowl"/>
+					<recipe name="Instant Pot Chicken and Dumplings"/>
+					<recipe name="Mediterranean Quinoa Bowls with Roasted Red Pepper Sauce"/>
+					<recipe name="The Absolute Easiest Spinach and Artichoke Pizza"/>
+					<recipe name="Chipotle Orange Shrimp with Cilantro Rice"/>
+					<recipe name="Creamy Garlic Sun-Dried Tomato Pasta"/>
+					<recipe name="Spicy Salmon Burgers"/>
+				</recipes>
+			</specifiedtype>
+			<specifiedtype>
+				<title>QUICK AND EASY CHICKEN RECIPES</title>
+				<description>Everyone loves chicken, right? Simple fast recipes with your favorite bird.</description>
+				<recipes>
+					<recipe name="Honey Chipotle Chicken Skewers"/>
+					<recipe name="Ridiculously Good Air Fryer Chicken Breast"/>
+					<recipe name="Gochujang Chicken Burgers with Kimchi Bacon Jam"/>
+					<recipe name="Cilantro Orange Chicken with Rice and Beans"/>
+					<recipe name="Goddess Curry Chicken Salad"/>
+					<recipe name="Crispy Chicken Tikka Bowls with Mint Sauce"/>
+					<recipe name="Chicken Meatballs with Peppers and Orzo"/>
+					<recipe name="The Best Chicken Tinga Tacos"/>
+					<recipe name="Jalapeño Lime Chicken Soup"/>
+					<recipe name="Summer Chipotle Chicken Cobb Salad with Cilantro Vinaigrette"/>
+					<recipe name="Greek Baked Orzo"/>
+					<recipe name="Spicy Chicken Meal Prep with Rice and Beans"/>
+					<recipe name="Healthy Garlic Herb Chicken Salad"/>
+					<recipe name="Instant Pot Coconut Tandoori-Inspired Chicken"/>
+					<recipe name="Instant Pot Creole Chicken and Sausage"/>
+					<recipe name="Spicy Chicken and Sweet Potato Meal Prep Magic"/>
+					<recipe name="Instant Pot Hawaiian Chicken Tacos with Jalapeño Ranch Slaw"/>
+					<recipe name="Instant Pot Buffalo Chicken Tacos"/>
+					<recipe name="Healing Chicken and Rice Soup"/>
+					<recipe name="Sheet Pan Chicken Tinga Bowls"/>
+					<recipe name="Chicken Tikka Masala"/>
+					<recipe name="Sheet Pan Chicken Pitas with Tzatziki"/>
+					<recipe name="Instant Pot Chicken Cacciatore"/>
+					<recipe name="Basic + Awesome Chicken Quinoa Salad"/>
+					<recipe name="Instant Pot Chicken and Dumplings"/>
+				</recipes>
+			</specifiedtype>
+			<specifiedtype>
+				<title>QUICK AND EASY INSTANT POT RECIPES</title>
+				<description>Already quick and now even easier with your Instant Pot!</description>
+				<recipes>
+					<recipe name="Instant Pot Mac and Cheese"/>
+					<recipe name="Instant Pot Chicken and Dumplings"/>
+					<recipe name="Instant Pot Cauliflower Curry"/>
+					<recipe name="Instant Pot Hawaiian Chicken Tacos with Jalapeño Ranch Slaw"/>
+					<recipe name="Spicy Peanut Soup with Sweet Potato + Kale"/>
+					<recipe name="Instant Pot Red Curry Lentils"/>
+					<recipe name="Instant Pot Creole Chicken and Sausage"/>
+					<recipe name="Instant Pot Short Rib Ragu"/>
+					<recipe name="Everything Greek Pork Pitas"/>
+					<recipe name="Instant Pot Korean Beef Tacos"/>
+				</recipes>
+			</specifiedtype>
+		</childtype>
+	</parenttpye>
+</specifiedtype>
