@@ -1,0 +1,41 @@
+@inject HttpClient https
+
+@using Client.Components.Home
+@using Client.Models
+@using Client.Constants
+
+@page "/home"
+
+
+@if (showingMovies is not null && upcomingMovies is not null)
+{
+    <div class="d-flex flex-column align-items-center gap-5">
+        <QuickBook />
+        <MovieList header="Phim đang chiếu" movies="@showingMovies" />
+        <MovieList header="Phim sắp chiếu" movies="@upcomingMovies" />
+    </div> 
+}
+else
+{
+    <p>Đang tải dữ liệu...</p>
+}
+
+@code 
+{
+    private Movie[]? showingMovies;
+
+    private Movie[]? upcomingMovies;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            this.showingMovies = await https.GetFromJsonAsync<Movie[]?>($"{APIConstants.BaseUrl}{APIConstants.MovieShowingAPIRoot}");
+            this.upcomingMovies = await https.GetFromJsonAsync<Movie[]?>($"{APIConstants.BaseUrl}{APIConstants.MovieShowingAPIRoot}");
+        }
+        catch (HttpRequestException e)
+        {
+            Console.Write(e.Message);
+        }
+    }
+}

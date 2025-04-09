@@ -1,0 +1,60 @@
+@using Client.Models
+
+<style>
+    .movie-list {
+        display: flex;
+        overflow-x: auto; /* Cuộn ngang */
+        scroll-snap-type: x mandatory; /* Giúp cuộn mượt */
+        max-width: 90vw; /* Giới hạn chiều rộng */
+        gap: 10px;
+    }
+
+    .movie-list::-webkit-scrollbar {
+        height: 10px;
+    }
+
+    .movie-list::-webkit-scrollbar-thumb {
+        background-color: #888;
+        border-radius: 10px;
+    }
+
+    .movie-display {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-top: 10px;
+        text-align: center;
+        min-width: 220px;
+        scroll-snap-align: start; /* Cuộn từng phim một */
+    }
+
+    .movie-display img {
+        border-radius: 10px;
+    }
+</style>
+
+
+
+<div class="d-flex flex-column align-items-center">
+    <h1>@header</h1>
+    <div class="movie-list">
+        @foreach (Movie movie in movies ?? new Movie[]{})
+        {
+            <fieldset class="movie-display">
+                <img src="@movie.ImageUrl" alt="img" width="200" height="300">
+                <legend style="font-size: 15px;" class="mt-2">@movie.NameVn</legend>
+            </fieldset>
+        }
+    </div>
+</div>
+
+@code 
+{
+    [Parameter]
+    public string? header {get; set;}
+
+    [Parameter]
+    public Movie[]? movies {get; set;}
+}
