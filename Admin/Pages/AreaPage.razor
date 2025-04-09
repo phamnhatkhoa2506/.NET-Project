@@ -1,0 +1,24 @@
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+@using Admin.Components
+@using Admin.Constants
+@using Admin.Models
+
+@page "/area"
+
+<PageTitle>@languageConstantsService.Constants.AreaPageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.AreaH1</h1>
+
+<p>@languageConstantsService.Constants.AreaP</p>
+
+<MainSpace 
+    T="Area"
+    BaseUrl="@fullBaseUrl"
+    EntityName="area" 
+/>
+
+@code {
+    private string fullBaseUrl = $"{APIConstants.BaseUrl}{APIConstants.AreaAPIRoot}";
+}
+

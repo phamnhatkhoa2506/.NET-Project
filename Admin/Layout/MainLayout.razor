@@ -1,0 +1,136 @@
+﻿@inherits LayoutComponentBase
+
+@inject Admin.Services.LanguageService languageService
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+@inject IJSRuntime JS
+
+@using Admin.Constants
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        @* Thêm chuyển đổi ngôn ngữ *@
+        <div class="top-row px-4">
+            @* Chuyển đổi chế độ sáng *@
+            <div class="dropdown-mode me-5">
+                <div class="dropdown-toggle" @onclick="ModeToggleDropdown">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sun-fill" viewBox="0 0 16 16">
+                        <path id="selected-path-mode" d="@ModePathConstants.Paths[this.currentMode]"/>
+                    </svg>
+                    <span id="selected-text-mode">@languageConstantsService.Constants.ModeNames[this.currentMode]</span>
+                </div>
+
+                <div class="dropdown-menu-mode" id="dropdown-menu-mode">
+                    <div class="dropdown-item-mode" @onclick='() => SelectModeOption("light", $"{languageConstantsService.Constants.LightMode}", $"{URLConstants.LightModePath}")'>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sun-fill" viewBox="0 0 16 16">
+                            <path d="@URLConstants.LightModePath"/>
+                        </svg>
+                        @languageConstantsService.Constants.LightMode
+                    </div>
+                    <div class="dropdown-item-mode" @onclick='() => SelectModeOption("dark", $"{languageConstantsService.Constants.DarkMode}", $"{URLConstants.DarkModePath}")'>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-moon-fill" viewBox="0 0 16 16">
+                            <path d="@URLConstants.DarkModePath"/>
+                        </svg>
+                        @languageConstantsService.Constants.DarkMode
+                    </div>
+                    <div class="dropdown-item-mode" @onclick='() => SelectModeOption("special", $"{languageConstantsService.Constants.SpecialMode}", $"{URLConstants.SpecialModePath}")'>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box" viewBox="0 0 16 16">
+                            <path d="@URLConstants.SpecialModePath"/>
+                        </svg>
+                        @languageConstantsService.Constants.SpecialMode
+                    </div>
+                </div>
+            </div>
+
+            @* Chuyển đổi ngôn ngữ *@
+            <div class="dropdown-lang me-5">
+                <div class="dropdown-toggle" @onclick="LanguageToggleDropdown">
+                    <img id="selected-img-lang" src="@LanguageValuesConstants.Urls[this.currentLanguage]" alt="UK Flag">
+                    <span id="selected-text-lang">@languageConstantsService.Constants.LangNames[this.currentLanguage]</span>
+                </div>
+
+                <div class="dropdown-menu-lang" id="dropdown-menu-lang">
+                    <div class="dropdown-item-lang" @onclick='() => SelectLanguageOption("en", "English", $"{URLConstants.UKFlag}")'>
+                        <img draggable="false" src="@URLConstants.UKFlag" alt="UK Flag"> @languageConstantsService.Constants.LangNames["en"]
+                    </div>
+                    <div class="dropdown-item-lang" @onclick='() => SelectLanguageOption("vn", "Tiếng Việt", $"{URLConstants.VietNamFlag}")'>
+                        <img draggable="false" src="@URLConstants.VietNamFlag" alt="Vietnam Flag"> @languageConstantsService.Constants.LangNames["vn"]
+                    </div>
+                    <div class="dropdown-item-lang" >
+                        <img draggable="false" src="@URLConstants.JapanFlag" alt="Japan Flag"> @languageConstantsService.Constants.LangNames["jp"]
+                    </div>
+                </div>
+            </div>
+            @* Nút logout *@
+            <div>
+                <button>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-box-arrow-in-right" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0z"/>
+                        <path fill-rule="evenodd" d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    private string currentLanguage = "en";
+
+    private string currentMode = "dark";
+
+    protected override async Task OnInitializedAsync()
+    {
+        @* Lấy ngôn ngữ hiện tại ở localStorage *@
+        var lang = await JS.InvokeAsync<string>("localStorage.getItem", "currentLanguage");
+        languageService.currentLanguage = lang;
+        this.currentLanguage = lang;
+
+        var theme = await JS.InvokeAsync<string>("localStorage.getItem", "theme");
+        if (String.IsNullOrEmpty(theme.ToString()))
+        {
+            // Kiểm tra chế độ hệ thống nếu không có giá trị trong localStorage
+            var systemPreferDark = await JS.InvokeAsync<bool>("(function() { return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches; })");
+            this.currentMode = "dark";
+        }
+        else
+        {
+            this.currentMode = theme;
+        }
+    }
+
+    @* Cuộn DropDown Language *@
+    private async Task LanguageToggleDropdown()
+    {
+        await JS.InvokeVoidAsync("toggleLanguageDropdown");
+    }
+
+    @* Chọn 1 Option Language *@
+    private async Task SelectLanguageOption(string lang, string langName, string imgUrl)
+    {
+        languageService.ChangeLanguage(lang); @* Chuyển đổi ngôn ngữ *@
+        await JS.InvokeVoidAsync("updateUI", lang); 
+        StateHasChanged(); @* Cập nhật để commit giao diện*@
+        await JS.InvokeVoidAsync("selectLanguageOption", langName, imgUrl); 
+    }
+
+    @* Cuộn DropDown Mode *@
+    private async Task ModeToggleDropdown()
+    {
+        await JS.InvokeVoidAsync("toggleModeDropdown");
+    }
+
+    @* Chọn 1 Option Mode *@
+    private async Task SelectModeOption(string mode, string modeName, string path)
+    { 
+        this.currentMode = mode; // Cập nhật biến currentMode
+        await JS.InvokeVoidAsync("selectModeOption", mode, modeName, path); 
+        StateHasChanged(); // Cập nhật lại UI Blazor
+    }
+}

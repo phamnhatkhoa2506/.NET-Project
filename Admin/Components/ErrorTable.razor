@@ -1,0 +1,47 @@
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+<style>
+    .error-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .error-box {
+        background: var(--ERROR-BOX-BG-COLOR);
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .error-box button {
+        background: var(--ERROR-BUTTON-BG-COLOR);
+        color: var(--ERROR-BUTTON-TEXT-COLOR);
+        border: none;
+        padding: 10px 15px;
+        cursor: pointer;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+
+    .error-box button:hover {
+        background: #b71c1c;
+    }
+</style>
+
+<div class="error-container">
+    <div class="error-box">
+        <h2>@languageConstantsService.Constants.ErrorTitle</h2>
+        <p>@languageConstantsService.Constants.ErrorMassage</p>
+        <button @onclick="@(() => RetryLoadData.InvokeAsync())">
+            @languageConstantsService.Constants.RetryButton
+        </button>
+    </div>
+</div>
+
+@code 
+{
+    [Parameter]
+    public EventCallback RetryLoadData {get; set;}
+}

@@ -1,0 +1,269 @@
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+@inject Admin.Helpers.PageStateManager pageStateManager
+@inject HttpClient Http 
+
+@using Admin.Components
+@using Admin.Constants
+@using Admin.Models
+@using Admin.States
+
+@page "/movie"
+
+<PageTitle>@languageConstantsService.Constants.MoviePageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.MovieH1</h1>
+
+<p>@languageConstantsService.Constants.MovieP</p>
+
+@* Chỉ xuất hien khi edit 1 phim *@
+@if (isAddingMovie)
+{
+    <MovieCreate CloseAddingMovieWindow="CloseAddingMovieWindow"
+               ReloadData="RetryLoadData"></MovieCreate>
+}
+@if (isEditingMovie)
+{
+
+}
+
+@if (isErrorLoading)
+{
+    <ErrorTable RetryLoadData="RetryLoadData" />
+}
+else
+{
+    @if (this.allMovies is null || this.showingMovies is null || this.upcomingMovies is null)
+    {
+        <WaitingLoad />
+    }
+    else
+    {
+        <div class="d-flex flex-row">
+            <button class="movie-status-btn @(@selectedStatusButton == "all" ? "selected-status-btn" : "")"
+                    @onclick='() => SelectButton("all")'>
+                @languageConstantsService.Constants.MovieAllText
+            </button>
+            <button class="movie-status-btn @(@selectedStatusButton == "showing" ? "selected-status-btn" : "")"
+                    @onclick='() => SelectButton("showing")'>
+                @languageConstantsService.Constants.MovieShowingText
+            </button>
+            <button class="movie-status-btn @(@selectedStatusButton == "upcoming" ? "selected-status-btn" : "")"
+                    @onclick='() => SelectButton("upcoming")'>
+                @languageConstantsService.Constants.MovieUpcomingText
+            </button>
+        </div>
+
+        <div class="movie-space">
+            <div class="d-flex flex-row align-items-center w-100 mb-3">
+                <div class="flex-grow-1" style="padding-top: 10px;">
+                    <input  @bind="FilterInput" @bind:event="oninput"
+                            id="search-input" type="text" 
+                            style="width: 400px;"
+                            placeholder="@languageConstantsService.Constants.FindingButtonPlaceholder"> 
+                </div>
+                <div style="padding-top: 12px;">
+                    <button id="add-movie-btn"
+                            @onclick="OpenAddingMovieWindow">
+                        @languageConstantsService.Constants.AddingMovieButtonText
+                    </button>
+                </div>
+            </div>
+            <div class="table-container" style="height: 55vh;">
+                <table class="table">
+                    <thead style="font-size: 13px;">
+                        <tr>
+                            <th>@languageConstantsService.Constants.VietnameseName</th>
+                            <th>@languageConstantsService.Constants.EnglishName</th>
+                            <th>@languageConstantsService.Constants.DirectorContext</th>
+                            <th>@languageConstantsService.Constants.Notion</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-size: 10px;">
+                        @foreach (var movie in currentMoviesFiltered ?? new Movie[]{})
+                        {
+                            <tr>    
+                                <td>@movie.NameVn</td>
+                                <td>@movie.NameEn</td>
+                                <td>@movie.Director</td>
+                                <td>
+                                    <button id="erase-element-btn" @onclick="() => DeleteMovie(movie.Id ?? Guid.NewGuid())">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                                            <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+                                        </svg>
+                                    </button>
+                                    <button id="edit-element-btn"
+                                            @onclick="OpenEditingMovieWindow">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                            <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
+
+@code
+{
+    private Movie[]? allMovies;
+
+    private Movie[]? showingMovies;
+
+    private Movie[]? upcomingMovies;
+
+    private Movie[]? currentMovies;
+
+    private Movie[]? currentMoviesFiltered;
+
+    private string selectedStatusButton = "all";
+
+    private string filterInput = "";
+
+    private string FilterInput
+    {
+        get => filterInput;
+        set
+        {
+            filterInput = value;
+            SearchForMovies();
+        }
+    }
+
+    private bool isErrorLoading = false;
+
+    private bool isAddingMovie = false;
+
+    private bool isEditingMovie = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var state = pageStateManager.tableState["movie"] as MoviePageState;
+            if (state is null)
+                return;
+            
+            await state.LoadDataAsync();
+
+            if (state.AllMovies is null || state.ShowingMovies is null || state.UpcomingMovies is null) 
+            {
+                isErrorLoading = true; 
+                return;
+            }
+
+            this.allMovies = state.AllMovies;
+            this.showingMovies = state.ShowingMovies;
+            this.upcomingMovies = state.UpcomingMovies;
+
+            this.currentMovies = state.AllMovies;
+
+            SearchForMovies();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            isErrorLoading = true;
+        }
+    }
+
+    private void SearchForMovies()
+    {
+        if (string.IsNullOrWhiteSpace(FilterInput))
+        {
+            this.currentMoviesFiltered = this.currentMovies;
+        }
+        else
+        {
+            this.currentMoviesFiltered = this.currentMovies?.Where(c =>
+                c.NameVn.Contains(FilterInput, StringComparison.OrdinalIgnoreCase) ||
+                c.NameEn.Contains(FilterInput, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        }
+    }
+
+    private void SelectButton(string button)
+    {
+        if (this.selectedStatusButton == button)
+        {
+            return;
+        }
+
+        this.selectedStatusButton = button;
+
+        if (button == "all")
+        {
+            this.currentMovies = this.allMovies;
+        }
+        else if (button == "showing")
+        {
+            this.currentMovies = this.showingMovies;
+        }
+        else
+        {
+            this.currentMovies = this.upcomingMovies;
+        }
+
+        this.currentMoviesFiltered = this.currentMovies;
+        SearchForMovies();
+    }
+
+    private async Task DeleteMovie(Guid id)
+    {
+        var result = await Http.DeleteAsync($"{@APIConstants.BaseUrl}{@APIConstants.MovieAPIRoot}/{id.ToString()}");
+        
+        if (allMovies is null || showingMovies is null || upcomingMovies is null)
+            return;
+
+        if (selectedStatusButton == "all")
+        {
+            allMovies = allMovies.Where(m => m.Id != id).ToArray();
+            currentMoviesFiltered = allMovies;
+        } 
+        else if (selectedStatusButton == "showing")
+        {
+            showingMovies = showingMovies.Where(m => m.Id != id).ToArray();
+            allMovies = allMovies.Where(m => m.Id != id).ToArray();
+            currentMoviesFiltered = showingMovies;
+        }
+        else
+        {
+            upcomingMovies = upcomingMovies.Where(m => m.Id != id).ToArray();
+            allMovies = allMovies.Where(m => m.Id != id).ToArray();
+            currentMoviesFiltered = upcomingMovies;
+        }
+            
+        SearchForMovies();
+        StateHasChanged();
+    }
+ 
+    private async Task RetryLoadData()
+    {
+        isErrorLoading = false;
+        await OnInitializedAsync();
+    }
+
+    private void OpenAddingMovieWindow()
+    {
+        this.isAddingMovie = true;
+    }
+
+    private void CloseAddingMovieWindow()
+    {
+        this.isAddingMovie = false;
+    }
+
+    private void OpenEditingMovieWindow()
+    {
+        this.isEditingMovie = true;
+    }
+
+    private void CloseEditingMovieWindow()
+    {
+        this.isEditingMovie = false;
+    }
+}   

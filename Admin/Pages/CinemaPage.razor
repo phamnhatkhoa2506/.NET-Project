@@ -1,0 +1,307 @@
+@inject HttpClient Http
+@inject Admin.Helpers.PageStateManager pageStateManager
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+@using Admin.Constants
+@using Admin.Models
+@using Admin.Components
+@using Admin.States
+@using System.Text.Json;
+
+@page "/cinema"
+
+<PageTitle>@languageConstantsService.Constants.CinemaPageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.CinemaH1</h1>
+
+<p>@languageConstantsService.Constants.CinemaP</p>
+
+@if (isErrorLoading)
+{
+    <ErrorTable RetryLoadData="RetryLoadData" />
+}
+else 
+{
+    @if (cinemas == null || showingCinemas == null) 
+    {
+        <WaitingLoad />
+    }
+    else 
+    {
+        <div class="d-flex flex-column w-100 mb-3 gap-2">
+            <div class="d-flex flex-row flex-wrap gap-2">                
+                <input  @bind="newNameVn" @bind:event="oninput"
+                        style="width: 250px"
+                        class="@((isPriceError && newNameVn == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" 
+                        placeholder="@languageConstantsService.Constants.EnterNameVNInputPlaceholder">
+                <input  @bind="newNameEn" @bind:event="oninput"
+                        style="width: 250px"
+                        class="@((isPriceError && newNameEn == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" 
+                        placeholder="@languageConstantsService.Constants.EnterNameENInputPlaceholder">
+                <select @bind="areaSelected" class="type-select">
+                    @foreach (var area in areas ?? new Area[]{})
+                    {
+                        <option>@area.NameVn | @area.NameEn</option>
+                    }
+                </select>
+                <input  @bind="newAddress" @bind:event="oninput"
+                        style="width: 100px"
+                        class="@((isPriceError && newAddress == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" 
+                        placeholder="@languageConstantsService.Constants.EnterNameAddressInputPlaceholder phòng">
+                <input  @bind="newNumRooms" @bind:event="oninput"
+                        style="width: 100px"
+                        class="@((isPriceError && newNumRooms == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" 
+                        placeholder="@languageConstantsService.Constants.EnterNameRoomQuantityInputPlaceholder">
+                <button id="add-btn" @onclick="AddCinema">
+                    @languageConstantsService.Constants.AddingButtonText
+                </button>
+                <div class="mt-2 me-3 ms-3" style="font-size: small; margin-bottom: 0;">
+                    <p class="notification-name-input me-3" style="color: @notificationColor">@notificationString</p>
+                </div>
+            </div>
+            <div class="flex-grow-1 d-flex flex-row justify-content-end">
+                <input  @bind="input" @bind:event="oninput" id="search-input" type="text" 
+                        style="width: 30vh;"
+                        placeholder="@languageConstantsService.Constants.FindingButtonPlaceholder"> 
+            </div>
+        </div>
+        <div class="table-container" style="font-size: 12px;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>@languageConstantsService.Constants.VietnameseName</th>
+                        <th>@languageConstantsService.Constants.EnglishName</th>
+                        <th>@languageConstantsService.Constants.TypeName</th>
+                        <th>@languageConstantsService.Constants.TicketPriceContext</th>
+                        <th>@languageConstantsService.Constants.QuantityContext</th>
+                        <th>@languageConstantsService.Constants.Notion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cinema in showingCinemas)
+                    {
+                        <tr>    
+                            <td>@cinema.NameVn</td>
+                            <td>@cinema.NameEn</td>
+                            <td>@cinema.Area.NameVn - @cinema.Area.NameEn</td>
+                            <td>@cinema.Address</td>
+                            <td>@cinema.NumRooms</td>
+                            <td>
+                                <button id="erase-element-btn" @onclick="() => Deletecinema(cinema.Id)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                                        <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+                                    </svg>
+                                </button>
+                                <button id="edit-element-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                        <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+
+@code {
+    private bool isErrorLoading = false;
+
+    private Cinema[]? cinemas;
+
+    private Cinema[]? showingCinemas;
+
+    private Area[]? areas;
+
+    private string newNameVn = "";
+
+    private string newNameEn = "";
+
+    private string newAddress = "";
+
+    private string newNumRooms = "";
+
+    private string areaSelected = "";
+
+    private string _input = "";
+
+    private string notificationString = "";
+    
+    private string notificationColor = "none";
+
+    private bool isPriceError = false;
+
+    private string input
+    {
+        get => _input;
+        set
+        {
+            _input = value;
+            SearchForcinema();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (cinemas is not null)
+        {
+            return;
+        }
+
+        try
+        {
+            // Load api cinema neu chua load
+            var cinemastate = (BasePageState<Cinema>?)pageStateManager.tableState["cinema"];
+            if (cinemastate is null)
+                return;
+            
+            await cinemastate.LoadDataAsync($"{@APIConstants.BaseUrl}{@APIConstants.CinemaAPIRoot}");
+            this.cinemas = cinemastate.entities;
+            this.showingCinemas = this.cinemas;
+            SearchForcinema();
+
+            if (cinemas == null || !cinemas.Any()) 
+                isErrorLoading = true; 
+
+            var areaState = (BasePageState<Area>?)pageStateManager.tableState["area"];
+            if (areaState is null)
+                return;
+
+            await areaState.LoadDataAsync($"{APIConstants.BaseUrl}{APIConstants.CinemaAPIRoot}");
+            this.areas = areaState.entities;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            isErrorLoading = true;
+        }
+    }
+
+    public async Task AddCinema()
+    {
+        if (string.IsNullOrWhiteSpace(newNameVn) || 
+            string.IsNullOrWhiteSpace(newNameEn) ||
+            string.IsNullOrWhiteSpace(areaSelected) ||
+            string.IsNullOrWhiteSpace(newAddress) || 
+            string.IsNullOrWhiteSpace(newNumRooms))
+        {
+            this.notificationString = @languageConstantsService.Constants.NameError;
+            this.notificationColor = @ColorConstants.NameInputNotificationError;
+            this.isPriceError = true;
+
+            return;
+        }
+        if (!int.TryParse(newNumRooms, out _))
+        {
+            this.isPriceError = false;
+            this.notificationString = @languageConstantsService.Constants.InvalidQuantityNotification;
+            this.notificationColor = @ColorConstants.NameInputNotificationError;
+
+            return;
+        }
+
+        if (areas is null)
+        {
+            return;
+        }
+        
+        Area cinemaType = areas.Where(t => t.NameVn == areaSelected.Split(" | ").First()).First();
+        Cinema newcinema = new Cinema();
+
+        newcinema.NameVn = newNameVn;
+        newcinema.NameEn = newNameEn;
+        newcinema.Area = new Area();
+        newcinema.Area.Id = cinemaType.Id;
+        newcinema.Area.NameVn = cinemaType.NameVn;
+        newcinema.Area.NameEn = cinemaType.NameEn;
+        newcinema.Address = newAddress;
+        newcinema.NumRooms = int.Parse(newNumRooms);
+
+        Console.WriteLine(JsonSerializer.Serialize(newcinema));
+
+        try
+        {
+            var result = await Http.PostAsJsonAsync($"{@APIConstants.BaseUrl}{@APIConstants.CinemaAPIRoot}", newcinema);
+
+            if (result.IsSuccessStatusCode)
+            {   
+                cinemas = await Http.GetFromJsonAsync<Cinema[]>($"{@APIConstants.BaseUrl}{@APIConstants.CinemaAPIRoot}");
+                showingCinemas = cinemas;
+                StateHasChanged();
+
+                newNameVn = "";
+                newNameEn = "";
+                newAddress = "";
+                newNumRooms = "";
+
+                this.notificationString = @languageConstantsService.Constants.SuccessAddingNotification;
+                this.notificationColor = @ColorConstants.NameInputNotificationSuccess;
+                this.isPriceError = false;
+            }
+            else if (result.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                this.notificationString = @languageConstantsService.Constants.ConflictNotification;
+                this.notificationColor = @ColorConstants.NameInputNotificationFailed;
+            }
+            else
+            {
+                Console.WriteLine($"Fault");
+                this.isPriceError = false;
+                this.notificationString = @languageConstantsService.Constants.FailedAddingNotification;
+                this.notificationColor = @ColorConstants.NameInputNotificationFailed;;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+        }
+    }
+
+    public async Task Deletecinema(Guid? id)
+    {   
+        try
+        {
+            var result = await Http.DeleteAsync($"{@APIConstants.BaseUrl}{@APIConstants.CinemaAPIRoot}/{id.ToString()}");
+            
+            if (result.IsSuccessStatusCode)
+            {
+                cinemas = cinemas?.Where(c => c.Id != id).ToArray();
+                showingCinemas = cinemas;
+                StateHasChanged();
+            }
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+        }
+    }
+
+    private void SearchForcinema()
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            showingCinemas = cinemas;
+        }
+        else
+        {
+             showingCinemas = cinemas?.Where(t =>
+                t.NameVn.Contains(input, StringComparison.OrdinalIgnoreCase) ||
+                t.NameEn.Contains(input, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        }
+    } 
+
+    private async Task RetryLoadData()
+    {
+        isErrorLoading = false;
+        await OnInitializedAsync();
+    }
+}  

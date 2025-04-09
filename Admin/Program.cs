@@ -1,26 +1,18 @@
-var builder = WebApplication.CreateBuilder(args);
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Admin;
+using Admin.Services;
+using Admin.Helpers;
 
-// Add services to the container.
-builder.Services.AddRazorPages();
 
-var app = builder.Build();
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-}
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
 
-app.UseHttpsRedirection();
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+builder.Services.AddSingleton<LanguageService>(); // Thêm service language 
+builder.Services.AddSingleton<LanguageConstantsService>(); // Thêm service cho constants
+builder.Services.AddScoped<PageStateManager>(); // Thêm manager quản lý gọi api cho các trangs
 
-app.UseRouting();
-
-app.UseAuthorization();
-
-app.MapStaticAssets();
-app.MapRazorPages()
-   .WithStaticAssets();
-
-app.Run();
+await builder.Build().RunAsync();

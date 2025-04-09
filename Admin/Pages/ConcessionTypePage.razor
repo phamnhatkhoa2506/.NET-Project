@@ -1,0 +1,24 @@
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+@using Admin.Components
+@using Admin.Constants
+@using Admin.Models
+
+@page "/concession-type"
+
+<PageTitle>@languageConstantsService.Constants.ConcessionTypePageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.ConcessionTypeH1</h1>
+
+<p>@languageConstantsService.Constants.ConcessionTypeP</p>
+
+<MainSpace 
+    T="ConcessionType"
+    BaseUrl="@fullBaseUrl"
+    EntityName="concessionType" 
+/>
+
+@code {
+    private string fullBaseUrl = $"{APIConstants.BaseUrl}{APIConstants.ConcessionTypeAPIRoot}";
+}
+

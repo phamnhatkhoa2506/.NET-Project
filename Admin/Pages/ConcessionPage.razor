@@ -1,0 +1,331 @@
+@inject HttpClient Http
+@inject Admin.Helpers.PageStateManager pageStateManager
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+@using Admin.Constants
+@using Admin.Models
+@using Admin.Components
+@using Admin.States
+@using System.Text.Json;
+
+@page "/concession"
+
+<PageTitle>@languageConstantsService.Constants.ConcessionPageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.ConcessionH1</h1>
+
+<p>@languageConstantsService.Constants.ConcessionP</p>
+
+@if (isErrorLoading)
+{
+    <ErrorTable RetryLoadData="RetryLoadData" />
+}
+else 
+{
+    @if (concessions == null || showingConcessions == null) 
+    {
+        <WaitingLoad />
+    }
+    else 
+    {
+        <div class="d-flex flex-column w-100 mb-3 gap-2">
+            <div class="d-flex flex-row flex-wrap gap-2">                
+                <input  @bind="newNameVn" @bind:event="oninput"
+                        style="width: 250px"
+                        class="@((isPriceError && newNameVn == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" 
+                        placeholder="@languageConstantsService.Constants.EnterNameVNInputPlaceholder">
+                <input  @bind="newNameEn" @bind:event="oninput"
+                        style="width: 250px"
+                        class="@((isPriceError && newNameEn == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" 
+                        placeholder="@languageConstantsService.Constants.EnterNameENInputPlaceholder">
+                <select @bind="concessionTypeSelected" class="type-select">
+                    @foreach (var concessionType in concessionTypes ?? new ConcessionType[]{})
+                    {
+                        <option>@concessionType.NameVn | @concessionType.NameEn</option>
+                    }
+                </select>
+                <input  @bind="newPrice" @bind:event="oninput"
+                        style="width: 100px"
+                        class="@((isPriceError && newPrice == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" 
+                        placeholder="@languageConstantsService.Constants.EnterNamePriceInputPlaceholder">
+                <input  @bind="newQuantity" @bind:event="oninput"
+                        style="width: 100px"
+                        class="@((isPriceError && newQuantity == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" 
+                        placeholder="@languageConstantsService.Constants.EnterNameQuantityInputPlaceholder">
+                <input  @bind="newImgUrl" @bind:event="oninput"
+                        style="width: 300px"
+                        class="@((isPriceError && newQuantity == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" 
+                        placeholder="@languageConstantsService.Constants.EnterNameImgUrlInputPlaceholder">
+                <button id="add-btn" @onclick="AddConcession">
+                    @languageConstantsService.Constants.AddingButtonText
+                </button>
+                <div class="mt-2 me-3 ms-3" style="font-size: small; margin-bottom: 0;">
+                    <p class="notification-name-input me-3" style="color: @notificationColor">@notificationString</p>
+                </div>
+            </div>
+            <div class="flex-grow-1 d-flex flex-row justify-content-end">
+                <input  @bind="input" @bind:event="oninput" id="search-input" type="text" 
+                        style="width: 30vh;"
+                        placeholder="@languageConstantsService.Constants.FindingButtonPlaceholder"> 
+            </div>
+        </div>
+        <div class="table-container" style="font-size: 12px;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>@languageConstantsService.Constants.VietnameseName</th>
+                        <th>@languageConstantsService.Constants.EnglishName</th>
+                        <th>@languageConstantsService.Constants.TypeName</th>
+                        <th>@languageConstantsService.Constants.TicketPriceContext</th>
+                        <th>@languageConstantsService.Constants.QuantityContext</th>
+                        <th>@languageConstantsService.Constants.Notion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var concession in showingConcessions)
+                    {
+                        <tr>    
+                            <td>@concession.NameVn</td>
+                            <td>@concession.NameEn</td>
+                            <td>@concession.ConcessionType.NameVn - @concession.ConcessionType.NameEn</td>
+                            <td>@concession.Price.ToString().Substring(0, @concession.Price.ToString().Length - 3) VNĐ</td>
+                            <td>@concession.Quantity</td>
+                            <td>
+                                <button id="erase-element-btn" @onclick="() => DeleteConcession(concession.Id)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                                        <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+                                    </svg>
+                                </button>
+                                <button id="edit-element-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                        <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+
+@code {
+    private bool isErrorLoading = false;
+
+    private Concession[]? concessions;
+
+    private Concession[]? showingConcessions;
+
+    private ConcessionType[]? concessionTypes;
+
+    private string newNameVn = "";
+
+    private string newNameEn = "";
+
+    private string newPrice = "";
+
+    private string newQuantity = "";
+
+    private string newImgUrl = "";
+
+    private string concessionTypeSelected = "";
+
+    private string _input = "";
+
+    private string notificationString = "";
+    
+    private string notificationColor = "none";
+
+    private bool isPriceError = false;
+
+    private string input
+    {
+        get => _input;
+        set
+        {
+            _input = value;
+            SearchForconcession();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (concessions is not null)
+        {
+            return;
+        }
+
+        try
+        {
+            // Load api Concession neu chua load
+            var concessionState = (BasePageState<Concession>?)pageStateManager.tableState["concession"];
+            if (concessionState is null)
+            {
+                return;
+            }
+            
+            await concessionState.LoadDataAsync($"{@APIConstants.BaseUrl}{@APIConstants.ConcessionAPIRoot}");
+            this.concessions = concessionState.entities;
+            this.showingConcessions = this.concessions;
+            SearchForconcession();
+
+            if (concessions == null || !concessions.Any()) 
+            {
+                isErrorLoading = true; 
+            }
+
+            var concessionTypeState = (BasePageState<ConcessionType>?)pageStateManager.tableState["concessionType"];
+            if (concessionTypeState is null)
+            {
+                return;
+            }
+
+            await concessionTypeState.LoadDataAsync($"{APIConstants.BaseUrl}{APIConstants.ConcessionTypeAPIRoot}");
+            this.concessionTypes = concessionTypeState.entities;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            isErrorLoading = true;
+        }
+    }
+
+    public async Task AddConcession()
+    {
+        if (string.IsNullOrWhiteSpace(newNameVn) || 
+            string.IsNullOrWhiteSpace(newNameEn) ||
+            string.IsNullOrWhiteSpace(concessionTypeSelected) ||
+            string.IsNullOrWhiteSpace(newPrice) || 
+            string.IsNullOrWhiteSpace(newQuantity) ||
+            string.IsNullOrWhiteSpace(newImgUrl))
+        {
+            this.notificationString = @languageConstantsService.Constants.NameError;
+            this.notificationColor = @ColorConstants.NameInputNotificationError;
+            this.isPriceError = true;
+
+            return;
+        }
+        if (!decimal.TryParse(newPrice, out _))
+        {
+            this.isPriceError = false;
+            this.notificationString = @languageConstantsService.Constants.InvalidPriceNotification;
+            this.notificationColor = @ColorConstants.NameInputNotificationError;
+
+            return;
+        }
+        if (!int.TryParse(newQuantity, out _))
+        {
+            this.isPriceError = false;
+            this.notificationString = @languageConstantsService.Constants.InvalidQuantityNotification;
+            this.notificationColor = @ColorConstants.NameInputNotificationError;
+
+            return;
+        }
+
+        if (concessionTypes is null)
+        {
+            return;
+        }
+        
+        ConcessionType concessionType = concessionTypes.Where(t => t.NameVn == concessionTypeSelected.Split(" | ").First()).First();
+        Concession newConcession = new Concession();
+
+        newConcession.NameVn = newNameVn;
+        newConcession.NameEn = newNameEn;
+        newConcession.ConcessionType = new ConcessionType();
+        newConcession.ConcessionType.Id = concessionType.Id;
+        newConcession.ConcessionType.NameVn = concessionType.NameVn;
+        newConcession.ConcessionType.NameEn = concessionType.NameEn;
+        newConcession.Price = decimal.Parse(newPrice);
+        newConcession.Quantity = int.Parse(newQuantity);
+        newConcession.ImgUrl = newImgUrl;
+
+        Console.WriteLine(JsonSerializer.Serialize(newConcession));
+
+        try
+        {
+            var result = await Http.PostAsJsonAsync($"{@APIConstants.BaseUrl}{@APIConstants.ConcessionAPIRoot}", newConcession);
+
+            if (result.IsSuccessStatusCode)
+            {   
+                concessions = await Http.GetFromJsonAsync<Concession[]>($"{@APIConstants.BaseUrl}{@APIConstants.ConcessionAPIRoot}");
+                showingConcessions = concessions;
+                StateHasChanged();
+
+                newNameVn = "";
+                newNameEn = "";
+                newPrice = "";  
+                newQuantity = "";
+                newImgUrl = "";
+
+                this.notificationString = @languageConstantsService.Constants.SuccessAddingNotification;
+                this.notificationColor = @ColorConstants.NameInputNotificationSuccess;
+                this.isPriceError = false;
+            }
+            else if (result.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                this.notificationString = @languageConstantsService.Constants.ConflictNotification;
+                this.notificationColor = @ColorConstants.NameInputNotificationFailed;
+            }
+            else
+            {
+                Console.WriteLine($"Fault");
+                this.isPriceError = false;
+                this.notificationString = @languageConstantsService.Constants.FailedAddingNotification;
+                this.notificationColor = @ColorConstants.NameInputNotificationFailed;;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+        }
+    }
+
+    public async Task DeleteConcession(Guid? id)
+    {   
+        try
+        {
+            var result = await Http.DeleteAsync($"{@APIConstants.BaseUrl}{@APIConstants.ConcessionAPIRoot}/{id.ToString()}");
+            
+            if (result.IsSuccessStatusCode)
+            {
+                concessions = concessions?.Where(c => c.Id != id).ToArray();
+                showingConcessions = concessions;
+                StateHasChanged();
+            }
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+        }
+    }
+
+    private void SearchForconcession()
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            showingConcessions = concessions;
+        }
+        else
+        {
+             showingConcessions = concessions?.Where(t =>
+                t.ConcessionType.NameVn.Contains(input, StringComparison.OrdinalIgnoreCase) ||
+                t.ConcessionType.NameEn.Contains(input, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        }
+    } 
+
+    private async Task RetryLoadData()
+    {
+        isErrorLoading = false;
+        await OnInitializedAsync();
+    }
+}  

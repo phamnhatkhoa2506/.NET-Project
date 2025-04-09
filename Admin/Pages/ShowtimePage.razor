@@ -1,0 +1,305 @@
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+@inject Admin.Helpers.PageStateManager pageStateManager
+@inject HttpClient Http 
+
+@using Admin.Components
+@using Admin.Constants
+@using Admin.Models
+@using Admin.States
+
+@page "/showtime"
+
+<PageTitle>@languageConstantsService.Constants.ShowtimePageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.ShowtimeH1</h1>
+
+<p>@languageConstantsService.Constants.ShowtimeP</p>
+
+@if (isErrorLoading)
+{
+    <ErrorTable RetryLoadData="RetryLoadData" />
+}
+else
+{
+    @if (this.showtimes is null)
+    {
+        <WaitingLoad />
+    }
+    else
+    {
+        <div class="d-flex flex-row justify-content-center">
+            <h5>Tìm showtime: </h5>
+            <div class="flex-grow-1 mb-3">
+                <select @bind="SelectedDate">
+                    <option hidden selected>Chọn ngày</option>
+                    @foreach (DateOnly date in dates ?? new DateOnly[]{})
+                    {
+                        <option value="@date">@date.ToString()</option>
+                    }
+                </select>
+                <select @bind="SelectedTime">
+                    <option hidden selected>Chọn giờ</option>
+                    @foreach (TimeOnly time in times ?? new TimeOnly[]{})
+                    {
+                        <option value="@time">@time.ToString()</option>
+                    }
+                </select>
+                <select @bind="SelectedCinema">
+                    <option hidden selected>Chọn rạp</option>
+                    @foreach (Cinema cinema in cinemas ?? new Cinema[]{})
+                    {
+                        <option value="@cinema">@cinema.NameVn</option>
+                    }
+                </select>
+                <select @bind="SelectedMovie">
+                    <option hidden selected>Chọn phim</option>
+                    @foreach (Movie movie in movies ?? new Movie[]{})
+                    {
+                        <option value="@movie">@movie.NameVn</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <button @onclick="() => this.isAddingShowtime = !this.isAddingShowtime">Thêm showtime</button>
+            </div>
+            @if (isAddingShowtime)
+            {
+                <ShowtimeCreate movies="movies" rooms="rooms" ReloadData="RetryLoadData"/> 
+            }
+        </div>
+        <div class="table-container" style="max-height: 55vh;">
+            <table class="table">
+                <thead style="font-size: 13px;">
+                    <tr>
+                        <th>@languageConstantsService.Constants.DateShowContext</th>
+                        <th>@languageConstantsService.Constants.StartTimeContext</th>
+                        <th>@languageConstantsService.Constants.RoomNameContext</th>
+                        <th>@languageConstantsService.Constants.AddressContext</th>
+                        <th>@languageConstantsService.Constants.MovieNameContext</th>
+                        <th>@languageConstantsService.Constants.Notion</th>
+                    </tr>
+                </thead>
+                <tbody style="font-size: 10px;">
+                    @foreach (var showtime in currentShowtimes ?? new Showtime[]{})
+                    {
+                        <tr>    
+                            <td>@showtime.DateShow.ToString()</td>
+                            <td>@showtime.StartTime.ToString()</td>
+                            <td>@showtime.Room.Id</td>
+                            <td>@showtime.Room.Cinema.NameEn - @showtime.Room.Cinema.Address</td>
+                            <td>@showtime.Movie.NameVn</td>
+                            <td>
+                                <button id="erase-element-btn" @onclick="() => DeleteShowtime(showtime.Id)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                                        <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@code 
+{
+    private Showtime[]? showtimes;
+
+    private Showtime[]? currentShowtimes;
+
+    private Room[]? rooms;
+
+    private Cinema[]? cinemas;
+
+    private Movie[]? movies;
+
+    private DateOnly[]? dates;
+
+    private TimeOnly[]? times;
+
+    private string selectedDate = "Chọn ngày";
+
+    private string SelectedDate
+    {
+        get => selectedDate;
+        set
+        {
+            selectedDate = value;
+            SearchShowtimesWithDate(selectedDate);
+        }
+    }
+
+    private string selectedTime = "Chọn giờ";
+
+    private string SelectedTime
+    {
+        get => selectedTime;
+        set
+        {
+            selectedTime = value;
+            SearchShowtimesWithTime(selectedTime);
+        }
+    }
+
+    private string selectedCinema = "Chọn rạp";
+
+    private string SelectedCinema
+    {
+        get => selectedCinema;
+        set
+        {
+            selectedCinema = value;
+            SearchShowtimesWithCinema(selectedCinema);
+        }
+    }
+
+    private string selectedMovie = "Chọn phim";
+
+    private string SelectedMovie
+    {
+        get => selectedMovie;
+        set
+        {
+            selectedMovie = value;
+            SearchShowtimesWithMovie(selectedMovie);
+        }
+    }
+
+    private bool isErrorLoading = false;
+
+    private bool isAddingShowtime = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Goi API cho showtime
+            var state = pageStateManager.tableState["showtime"] as BasePageState<Showtime>;
+            if (state is null)
+                return;
+            await state.LoadDataAsync(
+                $"{APIConstants.BaseUrl}{APIConstants.ShowtimeAPIRoot}/all"
+            );
+            if (state.entities is null) 
+                isErrorLoading = true; 
+            this.showtimes = state.entities;
+            this.currentShowtimes = this.showtimes;
+            if (this.showtimes is not null)
+            {
+                this.dates = this.showtimes
+                            .Select(s => s.DateShow)
+                            .Distinct()
+                            .OrderDescending()
+                            .ToArray();
+
+                this.times = this.showtimes
+                            .Select(s => s.StartTime)
+                            .Distinct()
+                            .OrderDescending()
+                            .ToArray();
+            }
+
+            // Goi API cho room
+            var roomState = pageStateManager.tableState["room"] as BasePageState<Room>;
+            if (roomState is null)
+                return;
+            await roomState.LoadDataAsync(
+                $"{APIConstants.BaseUrl}{APIConstants.RoomAPIRoot}"
+            );
+            if (roomState.entities is null) 
+                isErrorLoading = true; 
+            this.rooms = roomState.entities;
+        
+            // Goi API cho cinema
+            var cinemaState = pageStateManager.tableState["cinema"] as BasePageState<Cinema>;
+            if (cinemaState is null)
+                return;
+            await cinemaState.LoadDataAsync(
+                $"{APIConstants.BaseUrl}{APIConstants.CinemaAPIRoot}"
+            );
+            if (cinemaState.entities is null) 
+                isErrorLoading = true; 
+            this.cinemas = cinemaState.entities;
+
+            // Goi API cho movie
+            var movieState = pageStateManager.tableState["movie"] as MoviePageState;
+            if (movieState is null)
+                return;
+            await movieState.LoadDataAsync();
+            if (movieState.AllMovies is null) 
+                isErrorLoading = true; 
+            this.movies = movieState.AllMovies;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            isErrorLoading = true;
+        }
+    }
+
+    public async Task DeleteShowtime(Guid? id)
+    {   
+        try
+        {
+            var result = await Http.DeleteAsync($"{@APIConstants.BaseUrl}{@APIConstants.ShowtimeAPIRoot}/{id.ToString()}");
+            
+            if (result.IsSuccessStatusCode)
+            {
+                showtimes = showtimes?.Where(s => s.Id != id).ToArray();
+                currentShowtimes = currentShowtimes?.Where(s => s.Id != id).ToArray();
+                StateHasChanged();
+            }
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+        }
+    }
+
+    private void SearchShowtimesWithDate(string date)
+    {
+        if (this.showtimes is null)
+            return;
+        this.currentShowtimes = this.showtimes
+                                .Where(s => s.DateShow.ToString() == date)
+                                .ToArray();
+    }
+
+    private void SearchShowtimesWithTime(string time)
+    {
+        if (this.showtimes is null)
+            return;
+        this.currentShowtimes = this.showtimes
+                                .Where(s => s.StartTime.ToString() == time)
+                                .ToArray();
+    }
+
+    private void SearchShowtimesWithCinema(string cinemaName)
+    {
+        if (this.showtimes is null)
+            return;
+        this.currentShowtimes = this.showtimes
+                                .Where(s => s.Room.Cinema.NameVn == cinemaName)
+                                .ToArray();
+    }
+
+    private void SearchShowtimesWithMovie(string movieName)
+    {
+        if (this.showtimes is null)
+            return;
+        this.currentShowtimes = this.showtimes
+                                .Where(s => s.Movie.NameVn == movieName)
+                                .ToArray();
+    }
+
+    private async Task RetryLoadData()
+    {
+        Console.Write("Hello");
+        isErrorLoading = false;
+        this.showtimes = await Http.GetFromJsonAsync<Showtime[]?>($"{APIConstants.BaseUrl}{APIConstants.ShowtimeAPIRoot}/all");
+        this.currentShowtimes = this.showtimes;
+        await OnInitializedAsync();
+    }
+}

@@ -1,0 +1,246 @@
+@inject HttpClient Http
+@inject Admin.Helpers.PageStateManager pageStateManager
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+@using Admin.Constants
+@using Admin.Models
+@using Admin.Components
+@using Admin.States
+
+@if (isErrorLoading)
+{
+    <ErrorTable RetryLoadData="RetryLoadData" />
+}
+else 
+{
+    @if (entities == null || showingEntities == null) 
+    {
+        <WaitingLoad />
+    }
+    else 
+    {
+        <div class="d-flex flex-row align-items-center w-100 mb-3">
+            <div class="flex-grow-1">
+                <input  @bind="input" @bind:event="oninput" id="search-input" type="text" 
+                        placeholder="@languageConstantsService.Constants.FindingButtonPlaceholder"> 
+            </div>
+            
+            <div class="d-flex flex-column flex-lg-row gap-2 align-items-center">
+
+                <input  @bind="newEntityVN" @bind:event="oninput" type="text" 
+                        placeholder="@languageConstantsService.Constants.EnterNameVNInputPlaceholder"
+                        class="@((isNameVNError && newEntityVN == "") ? "name-input name-input-error" : "name-input")" >
+                <input  @bind="newEntityEN" @bind:event="oninput" type="text" 
+                        placeholder="@languageConstantsService.Constants.EnterNameENInputPlaceholder"
+                        class="@((isNameENError && newEntityEN == "") ? "name-input name-input-error" : "name-input")" >
+                <button @onclick="AddEntity" id="add-btn">
+                    @languageConstantsService.Constants.AddingButtonText
+                </button>
+
+                <p class="notification-name-input me-3" style="color: @notificationColor">@notificationString</p>
+
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>@languageConstantsService.Constants.VietnameseName</th>
+                        <th>@languageConstantsService.Constants.EnglishName</th>
+                        <th>@languageConstantsService.Constants.Notion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entity in showingEntities)
+                    {
+                        <tr>    
+                            <td>@entity.Id.ToString()</td>
+                            <td>@entity.NameVn</td>
+                            <td>@entity.NameEn</td>
+                            <td>
+                                <button id="erase-element-btn" @onclick="() => DeleteEntity(entity.Id)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                                        <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@typeparam T where T : NameBase
+
+@code {
+    [Parameter]
+    public string BaseUrl {get; set;} = "";
+
+    [Parameter]
+    public string EntityName {get; set;} = "";
+
+    private bool isErrorLoading = false;
+
+    private T[]? entities;
+
+    private T[]? showingEntities;
+
+    private string newEntityVN = "";
+
+    private string newEntityEN = "";
+
+    private string _input = "";
+
+    private string notificationString = "";
+    
+    private string notificationColor = "none";
+
+    private bool isNameVNError = false;
+
+    private bool isNameENError = false;
+
+    private string input
+    {
+        get => _input;
+        set
+        {
+            _input = value;
+            SearchForEntities();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (entities is not null)
+        {
+            return;
+        }
+
+        try
+        {
+            var state = (BasePageState<T>?)pageStateManager.tableState[EntityName];
+            if (state is null)
+            {
+                return;
+            }
+            
+            await state.LoadDataAsync(this.BaseUrl);
+            this.entities = state.entities;
+            this.showingEntities = this.entities;
+            SearchForEntities();
+
+            if (entities == null || !entities.Any()) 
+            {
+                isErrorLoading = true; 
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            isErrorLoading = true;
+        }
+    }
+
+    private async Task AddEntity()
+    {
+        if (string.IsNullOrWhiteSpace(newEntityVN))
+        {
+            this.notificationString = @languageConstantsService.Constants.NameError;
+            this.notificationColor = @ColorConstants.NameInputNotificationError;
+            this.isNameVNError = true;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newEntityEN))
+        {
+            this.notificationString = @languageConstantsService.Constants.NameError;
+            this.notificationColor = @ColorConstants.NameInputNotificationError;
+            this.isNameENError = true;
+            return;
+        }
+        
+        NameBase newEntity = new NameBase();
+        newEntity.NameVn = newEntityVN;
+        newEntity.NameEn = newEntityEN;
+
+        try
+        {
+            var result = await Http.PostAsJsonAsync($"{this.BaseUrl}", newEntity);
+
+            if (result.IsSuccessStatusCode)
+            {
+                entities = await Http.GetFromJsonAsync<T[]>($"{this.BaseUrl}");
+                showingEntities = entities;
+                
+                StateHasChanged();
+
+                newEntityVN = "";
+                newEntityEN = "";
+
+                this.notificationString = @languageConstantsService.Constants.SuccessAddingNotification;
+                this.notificationColor = @ColorConstants.NameInputNotificationSuccess;
+            }
+            else if (result.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                this.notificationString = @languageConstantsService.Constants.ConflictNotification;
+                this.notificationColor = @ColorConstants.NameInputNotificationFailed;
+            }
+            else
+            {
+                Console.WriteLine("Failed");
+                this.notificationColor = @ColorConstants.NameInputNotificationFailed;
+                this.notificationString = @languageConstantsService.Constants.FailedAddingNotification;
+            }
+
+            this.isNameENError = false;
+            this.isNameVNError = false;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+        }
+    }
+
+    public async Task DeleteEntity(Guid? id)
+    {   
+        try
+        {
+            var result = await Http.DeleteAsync($"{this.BaseUrl}/{id.ToString()}");
+            
+            if (result.IsSuccessStatusCode)
+            {
+                entities = entities?.Where(c => c.Id != id).ToArray();
+                showingEntities = entities;
+                StateHasChanged();
+            }
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+        }
+    }
+
+    private void SearchForEntities()
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            showingEntities = entities;
+        }
+        else
+        {
+             showingEntities = entities?.Where(c =>
+                c.NameVn.Contains(input, StringComparison.OrdinalIgnoreCase) ||
+                c.NameEn.Contains(input, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        }
+    }
+
+    private async Task RetryLoadData()
+    {
+        isErrorLoading = false;
+        await OnInitializedAsync();
+    }
+}  

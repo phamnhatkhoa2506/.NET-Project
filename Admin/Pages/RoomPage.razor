@@ -1,0 +1,278 @@
+@inject HttpClient Http
+@inject Admin.Helpers.PageStateManager pageStateManager
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+@using Admin.Constants
+@using Admin.Models
+@using Admin.Components
+@using Admin.States
+@using System.Text.Json;
+
+@page "/room"
+
+<PageTitle>@languageConstantsService.Constants.RoomPageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.RoomH1</h1>
+
+<p>@languageConstantsService.Constants.RoomP</p>
+
+@if (isErrorLoading)
+{
+    <ErrorTable RetryLoadData="RetryLoadData" />
+}
+else 
+{
+    @if (rooms == null || showingRooms == null) 
+    {
+        <WaitingLoad />
+    }
+    else 
+    {
+        <div class="d-flex flex-column w-100 mb-3 gap-2">
+            <div class="d-flex flex-row flex-wrap gap-2">    
+                <select @bind="cinemaSelected" class="type-select">
+                    @foreach (var cinema in cinemas ?? new Cinema[]{})
+                    {
+                        <option>@cinema.NameVn | @cinema.NameEn</option>
+                    }
+                </select>
+                <select @bind="newRoomType">
+                    <option>Standard</option>
+                    <option>VIP</option>
+                </select>         
+                <input  @bind="newNumSeats" @bind:event="oninput"
+                        style="width: 250px"
+                        class="@((isPriceError && newNumSeats == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" 
+                        placeholder="@languageConstantsService.Constants.EnterNameSeatQuantityInputPlaceholder">
+                <button id="add-btn" @onclick="AddRoom">
+                    @languageConstantsService.Constants.AddingButtonText
+                </button>
+                <div class="mt-2 me-3 ms-3" style="font-size: small; margin-bottom: 0;">
+                    <p class="notification-name-input me-3" style="color: @notificationColor">@notificationString</p>
+                </div>
+            </div>
+            <div class="flex-grow-1 d-flex flex-row justify-content-end">
+                <input  @bind="input" @bind:event="oninput" id="search-input" type="text" 
+                        style="width: 30vh;"
+                        placeholder="@languageConstantsService.Constants.FindingButtonPlaceholder"> 
+            </div>
+        </div>
+        <div class="table-container" style="font-size: 12px; height: 55vh">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>@languageConstantsService.Constants.RoomTypeContext</th>
+                        <th>@languageConstantsService.Constants.NumSeatsContext</th>
+                        <th>@languageConstantsService.Constants.CinemaNameContext</th>
+                        <th>@languageConstantsService.Constants.Notion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var room in showingRooms)
+                    {
+                        <tr>    
+                            <td>@room.RoomType</td>
+                            <td>@room.NumSeats</td>
+                            <td>@room.Cinema.NameVn</td>
+                            <td>
+                                <button id="erase-element-btn" @onclick="() => Deleteroom(room.Id)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                                        <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+                                    </svg>
+                                </button>
+                                <button id="edit-element-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                        <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+
+@code {
+    private bool isErrorLoading = false;
+
+    private Room[]? rooms;
+
+    private Room[]? showingRooms;
+
+    private Cinema[]? cinemas;
+
+    private string newRoomType = "";
+
+    private string newNumSeats = "";
+
+    private string cinemaSelected = "";
+
+    private string _input = "";
+
+    private string notificationString = "";
+    
+    private string notificationColor = "none";
+
+    private bool isPriceError = false;
+
+    private string input
+    {
+        get => _input;
+        set
+        {
+            _input = value;
+            SearchForRoom();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (rooms is not null)
+            return;
+
+        try
+        {
+            // Load api room neu chua load
+            var roomState = (BasePageState<Room>?)pageStateManager.tableState["room"];
+            if (roomState is null)
+                return;
+            
+            await roomState.LoadDataAsync($"{@APIConstants.BaseUrl}{@APIConstants.RoomAPIRoot}");
+            this.rooms = roomState.entities;
+            this.showingRooms = this.rooms;
+            SearchForRoom();
+
+            if (rooms == null || !rooms.Any()) 
+                isErrorLoading = true; 
+
+            var cinemaState = (BasePageState<Cinema>?)pageStateManager.tableState["cinema"];
+            if (cinemaState is null)
+                return;
+
+            await cinemaState.LoadDataAsync($"{APIConstants.BaseUrl}{APIConstants.CinemaAPIRoot}");
+            this.cinemas = cinemaState.entities;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            isErrorLoading = true;
+        }
+    }
+
+    public async Task AddRoom()
+    {
+        if (string.IsNullOrWhiteSpace(cinemaSelected) ||
+            string.IsNullOrWhiteSpace(newNumSeats) || 
+            string.IsNullOrWhiteSpace(newRoomType))
+        {
+            this.notificationString = @languageConstantsService.Constants.NameError;
+            this.notificationColor = @ColorConstants.NameInputNotificationError;
+            this.isPriceError = true;
+
+            return;
+        }
+        if (!int.TryParse(newNumSeats, out _))
+        {
+            this.isPriceError = false;
+            this.notificationString = @languageConstantsService.Constants.InvalidQuantityNotification;
+            this.notificationColor = @ColorConstants.NameInputNotificationError;
+
+            return;
+        }
+
+        if (cinemas is null)
+        {
+            return;
+        }
+        
+        Cinema cinema = cinemas.Where(t => t.NameVn == cinemaSelected.Split(" | ").First()).First();
+        Room newRoom = new Room();
+
+        newRoom.Cinema = new Cinema();
+        newRoom.Cinema.Id = cinema.Id;
+        newRoom.RoomType = newRoomType;
+        newRoom.NumSeats = int.Parse(newNumSeats);
+
+        Console.WriteLine(JsonSerializer.Serialize(newRoom));
+
+        try
+        {
+            var result = await Http.PostAsJsonAsync($"{@APIConstants.BaseUrl}{@APIConstants.RoomAPIRoot}", newRoom);
+
+            if (result.IsSuccessStatusCode)
+            {   
+                rooms = await Http.GetFromJsonAsync<Room[]>($"{@APIConstants.BaseUrl}{@APIConstants.RoomAPIRoot}");
+                showingRooms = rooms;
+                StateHasChanged();
+
+                newRoomType = "";
+                newNumSeats = "";
+
+                this.notificationString = @languageConstantsService.Constants.SuccessAddingNotification;
+                this.notificationColor = @ColorConstants.NameInputNotificationSuccess;
+                this.isPriceError = false;
+            }
+            else if (result.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                this.notificationString = @languageConstantsService.Constants.ConflictNotification;
+                this.notificationColor = @ColorConstants.NameInputNotificationFailed;
+            }
+            else
+            {
+                Console.WriteLine($"Fault");
+                this.isPriceError = false;
+                this.notificationString = @languageConstantsService.Constants.FailedAddingNotification;
+                this.notificationColor = @ColorConstants.NameInputNotificationFailed;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+        }
+    }
+
+    public async Task Deleteroom(int id)
+    {   
+        try
+        {
+            var result = await Http.DeleteAsync($"{@APIConstants.BaseUrl}{@APIConstants.RoomAPIRoot}/{id}");
+            
+            if (result.IsSuccessStatusCode)
+            {
+                rooms = rooms?.Where(c => c.Id != id).ToArray();
+                showingRooms = rooms;
+                StateHasChanged();
+            }
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+        }
+    }
+
+    private void SearchForRoom()
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            showingRooms = rooms;
+        }
+        else
+        {
+             showingRooms = rooms?.Where(t =>
+                t.Cinema.NameVn.Contains(input, StringComparison.OrdinalIgnoreCase) ||
+                t.Cinema.NameEn.Contains(input, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        }
+    } 
+
+    private async Task RetryLoadData()
+    {
+        isErrorLoading = false;
+        await OnInitializedAsync();
+    }
+}  

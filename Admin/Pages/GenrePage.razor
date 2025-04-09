@@ -1,0 +1,24 @@
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+@using Admin.Components
+@using Admin.Constants
+@using Admin.Models;
+
+@page "/genre"
+
+<PageTitle>@languageConstantsService.Constants.GenrePageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.GenreH1</h1>
+
+<p>@languageConstantsService.Constants.GenreP</p>
+
+<MainSpace 
+    T="Genre"
+    BaseUrl="@fullBaseUrl"
+    EntityName="genre" 
+/>
+
+@code {
+    private string fullBaseUrl = $"{APIConstants.BaseUrl}{APIConstants.GenreAPIRoot}";
+}
+

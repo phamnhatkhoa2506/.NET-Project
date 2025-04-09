@@ -1,0 +1,265 @@
+@inject HttpClient Http
+@inject Admin.Helpers.PageStateManager pageStateManager
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+@using Admin.Constants
+@using Admin.Models
+@using Admin.Components
+@using Admin.States
+@using System.Text.Json;
+
+@page "/ticket"
+
+<PageTitle>@languageConstantsService.Constants.TicketPageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.TicketH1</h1>
+
+<p>@languageConstantsService.Constants.TicketP</p>
+
+@if (isErrorLoading)
+{
+    <ErrorTable RetryLoadData="RetryLoadData" />
+}
+else 
+{
+    @if (tickets == null || showingTickets == null) 
+    {
+        <WaitingLoad />
+    }
+    else 
+    {
+        <div class="d-flex flex-row align-items-center w-100 mb-3">
+            <div class="flex-grow-1">
+                <input  @bind="input" @bind:event="oninput" id="search-input" type="text" 
+                        placeholder="@languageConstantsService.Constants.FindingButtonPlaceholder"> 
+            </div>
+            <div class="d-flex flex-row gap-2">
+                <div class="mt-2 me-3 ms-3" style="font-size: small; margin-bottom: 0;">
+                    <p class="notification-name-input me-3" style="color: @notificationColor">@notificationString</p>
+                </div>
+                
+                <select @bind="ticketTypeSelected" class="type-select">
+                    @foreach (var ticketType in ticketTypes ?? new TicketType[]{})
+                    {
+                        <option>@ticketType.NameVn - @ticketType.NameEn</option>
+                    }
+                </select>
+                <input  @bind="newPrice" @bind:event="oninput"
+                        class="@((isPriceError && newPrice == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" 
+                        placeholder="@languageConstantsService.Constants.EnterNamePriceInputPlaceholder">
+                <button id="add-btn" @onclick="AddTicket">
+                    @languageConstantsService.Constants.AddingButtonText
+                </button>
+            </div>
+        </div>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>@languageConstantsService.Constants.VietnameseName</th>
+                        <th>@languageConstantsService.Constants.EnglishName</th>
+                        <th>@languageConstantsService.Constants.TicketPriceContext</th>
+                        <th>@languageConstantsService.Constants.Notion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var ticket in showingTickets)
+                    {
+                        <tr>    
+                            <td>@ticket.TicketType.NameVn</td>
+                            <td>@ticket.TicketType.NameEn</td>
+                            <td>@ticket.Price.ToString().Substring(0, @ticket.Price.ToString().Length - 3) VNĐ</td>
+                            <td>
+                                <button id="erase-element-btn" @onclick="() => DeleteTicket(ticket.Id)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                                        <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+
+@code {
+    private bool isErrorLoading = false;
+
+    private Ticket[]? tickets;
+
+    private Ticket[]? showingTickets;
+
+    private NameBase[]? ticketTypes;
+
+    private string newPrice = "";
+
+    private string ticketTypeSelected = "";
+
+    private string _input = "";
+
+    private string notificationString = "";
+    
+    private string notificationColor = "none";
+
+    private bool isPriceError = false;
+
+    private string input
+    {
+        get => _input;
+        set
+        {
+            _input = value;
+            SearchForTickets();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (tickets is not null)
+        {
+            return;
+        }
+
+        try
+        {
+            // Load api ticket neu chua load
+            var ticketState = (BasePageState<Ticket>?)pageStateManager.tableState["ticket"];
+            if (ticketState is null)
+            {
+                return;
+            }
+            
+            await ticketState.LoadDataAsync($"{APIConstants.BaseUrl}{APIConstants.TicketAPIRoot}");
+            this.tickets = ticketState.entities;
+            this.showingTickets = this.tickets;
+            SearchForTickets();
+
+            if (tickets == null || !tickets.Any()) 
+            {
+                isErrorLoading = true; 
+            }
+
+            // Load api ticket type neu chua load
+            var ticketTypeState = (BasePageState<TicketType>?)pageStateManager.tableState["ticketType"];
+            if (ticketTypeState is null)
+            {
+                return;
+            }
+
+            await ticketTypeState.LoadDataAsync($"{APIConstants.BaseUrl}{APIConstants.TicketTypeAPIRoot}");
+            this.ticketTypes = ticketTypeState.entities;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            isErrorLoading = true;
+        }
+    }
+
+    public async Task AddTicket()
+    {
+        if (string.IsNullOrWhiteSpace(newPrice) || string.IsNullOrWhiteSpace(ticketTypeSelected))
+        {
+            this.notificationString = @languageConstantsService.Constants.NameError;
+            this.notificationColor = @ColorConstants.NameInputNotificationError;
+            this.isPriceError = true;
+
+            return;
+        }
+        if (!decimal.TryParse(newPrice, out _))
+        {
+            this.isPriceError = false;
+            this.notificationString = @languageConstantsService.Constants.InvalidPriceNotification;
+            this.notificationColor = @ColorConstants.NameInputNotificationError;
+
+            return;
+        }
+        if (ticketTypes is null)
+        {
+            return;
+        }
+        
+        NameBase ticketType = ticketTypes.Where(t => t.NameVn == ticketTypeSelected.Split(" - ").First()).First();
+        Ticket newTicket = new Ticket();
+
+        newTicket.TicketType = new TicketType();
+        newTicket.TicketType.Id = ticketType.Id;
+        newTicket.TicketType.NameVn = ticketType.NameVn;
+        newTicket.TicketType.NameEn = ticketType.NameEn;
+        newTicket.Price = decimal.Parse(newPrice);
+
+        Console.WriteLine(JsonSerializer.Serialize(newTicket));
+
+        try
+        {
+            var result = await Http.PostAsJsonAsync($"{@APIConstants.BaseUrl}{@APIConstants.TicketAPIRoot}", newTicket);
+
+            if (result.IsSuccessStatusCode)
+            {   
+                tickets = await Http.GetFromJsonAsync<Ticket[]>($"{@APIConstants.BaseUrl}{@APIConstants.TicketAPIRoot}");
+                showingTickets = tickets;
+                StateHasChanged();
+                newPrice = "";
+
+                this.notificationString = @languageConstantsService.Constants.SuccessAddingNotification;
+                this.notificationColor = @ColorConstants.NameInputNotificationSuccess;
+                this.isPriceError = false;
+            }
+            else
+            {
+                Console.WriteLine($"Fault");
+                this.isPriceError = false;
+                this.notificationString = @languageConstantsService.Constants.FailedAddingNotification;
+                this.notificationColor = @ColorConstants.NameInputNotificationFailed;;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+        }
+    }
+
+    public async Task DeleteTicket(Guid? id)
+    {   
+        try
+        {
+            var result = await Http.DeleteAsync($"{@APIConstants.BaseUrl}{@APIConstants.TicketAPIRoot}/{id.ToString()}");
+            
+            if (result.IsSuccessStatusCode)
+            {
+                tickets = tickets?.Where(c => c.Id != id).ToArray();
+                showingTickets = tickets;
+                StateHasChanged();
+            }
+        }
+        catch(Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+        }
+    }
+
+    private void SearchForTickets()
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            showingTickets = tickets;
+        }
+        else
+        {
+             showingTickets = tickets?.Where(t =>
+                t.TicketType.NameVn.Contains(input, StringComparison.OrdinalIgnoreCase) ||
+                t.TicketType.NameEn.Contains(input, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        }
+    } 
+
+    private async Task RetryLoadData()
+    {
+        isErrorLoading = false;
+        await OnInitializedAsync();
+    }
+}  

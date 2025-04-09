@@ -1,0 +1,24 @@
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+@using Admin.Components
+@using Admin.Constants
+@using Admin.Models;
+
+@page "/seat-type"
+
+<PageTitle>@languageConstantsService.Constants.SeatTypePageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.SeatTypeH1</h1>
+
+<p>@languageConstantsService.Constants.SeatTypeP</p>
+
+<MainSpace 
+    T="SeatType"
+    BaseUrl="@fullBaseUrl"
+    EntityName="seatType" 
+/>
+
+@code {
+    private string fullBaseUrl = $"{APIConstants.BaseUrl}{APIConstants.SeatTypeAPIRoot}";
+}
+

@@ -1,0 +1,24 @@
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+@using Admin.Components
+@using Admin.Constants
+@using Admin.Models;
+
+@page "/limit-age"
+
+<PageTitle>@languageConstantsService.Constants.LimitAgePageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.LimitAgeH1</h1>
+
+<p>@languageConstantsService.Constants.LimitAgeP</p>
+
+<MainSpace 
+    T="LimitAge"
+    BaseUrl="@fullBaseUrl"
+    EntityName="limitAge" 
+/>
+
+@code {
+    private string fullBaseUrl = $"{APIConstants.BaseUrl}{APIConstants.LimitAgeAPIRoot}";
+}
+

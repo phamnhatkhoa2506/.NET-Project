@@ -1,0 +1,24 @@
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+@using Admin.Components
+@using Admin.Constants
+@using Admin.Models;
+
+@page "/ticket-type"
+
+<PageTitle>@languageConstantsService.Constants.TicketTypePageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.TicketTypeH1</h1>
+
+<p>@languageConstantsService.Constants.TicketTypeP</p>
+
+<MainSpace 
+    T="TicketType"
+    BaseUrl="@fullBaseUrl"
+    EntityName="ticketType" 
+/>
+
+@code {
+    private string fullBaseUrl = $"{APIConstants.BaseUrl}{APIConstants.TicketTypeAPIRoot}";
+}
+

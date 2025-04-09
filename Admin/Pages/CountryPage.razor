@@ -1,0 +1,23 @@
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+@using Admin.Constants
+@using Admin.Components
+@using Admin.Models;
+
+@page "/country"
+
+<PageTitle>@languageConstantsService.Constants.CountryPageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.CountryH1</h1>
+
+<p>@languageConstantsService.Constants.CountryP</p>
+
+<MainSpace 
+    T="Country"
+    BaseUrl="@fullBaseUrl"
+    EntityName="country" 
+/>
+
+@code {
+    private string fullBaseUrl = $"{APIConstants.BaseUrl}{APIConstants.CountryAPIRoot}";
+}

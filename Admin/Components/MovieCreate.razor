@@ -1,0 +1,413 @@
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+@inject Admin.Helpers.PageStateManager pageStateManager
+@inject HttpClient Http
+
+@using Admin.Constants
+@using Admin.Models
+@using Admin.States
+@using System.Text.Json
+
+<style>
+    .movie-edit-container {
+        position: absolute;
+        background-color: white;
+        height: 85vh;
+        width: 76%;
+        z-index: 100;
+        border-radius: 10px;
+        opacity: .97;
+        border: 5px solid white;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        color: black;
+    }
+
+    .movie-edit-container input {
+        background-color: rgb(236, 235, 233);
+    }
+
+    .movie-edit-container select {
+        background-color: rgb(255, 255, 255);
+        width: 100%;
+    }
+
+    .input-wrapper {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+        width: 250px;
+    }
+
+    .input-wrapper legend {
+        font-size: 14px;
+        color: #666;
+        padding: 0 5px;
+        margin-bottom: 0;
+        margin-top: 5px;
+    }
+
+    .input-wrapper input {
+        width: 100%;
+        font-size: 16px;
+        padding: 5px;
+    }
+</style>
+
+<div class="d-flex flex-column justify-content-center align-items-center movie-edit-container">
+    <div class="d-flex flex-row movie-edit-header"
+         style="width: 100%;">
+        <div class="" style="width: 100%; margin-left: 5px;">
+            <h1>Add movie</h1>
+        </div>
+        <div>
+            <button @onclick="CloseAddingMovieWindow">
+                <i class="fa-solid fa-circle-xmark"
+                style="font-size: 30px;"></i>
+            </button>
+        </div>
+    </div>
+    <div class="d-flex flex-row movie-edit" style="width: 100%; height: 100%;">
+        <fieldset class="d-flex flex-column flex-grow-2 gap-2 input-wrapper">
+            <div>
+                <legend>@languageConstantsService.Constants.VietnameseName</legend>
+                <input @bind="newNameVN" @bind:event="oninput" 
+                        class="@((isEmpty && newNameVN == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" />
+            </div>
+            <div>
+                <legend>@languageConstantsService.Constants.EnglishName</legend>
+                <input @bind="newNameEN" @bind:event="oninput" 
+                        class="@((isEmpty && newNameEN == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" />
+            </div>
+            <div>
+                <legend>@languageConstantsService.Constants.DurationContext</legend>
+                <input @bind="newDuration" @bind:event="oninput" 
+                        class="@((isEmpty && newDuration == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" />
+            </div>
+            <div>
+                <legend>@languageConstantsService.Constants.DirectorContext</legend>
+                <input @bind="newDirector" @bind:event="oninput" 
+                        class="@((isEmpty && newDirector == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" />
+            </div>
+            <div>
+                <legend>@languageConstantsService.Constants.ActorContext</legend>
+                <input @bind="newActor" @bind:event="oninput" 
+                        class="@((isEmpty && newActor == "") ? "name-input name-input-error" : "name-input")"
+                        type="text" />
+            </div>
+            <div>
+                <legend>@languageConstantsService.Constants.ReleasedDateContext</legend>
+                <input @bind="newReleasedDate" @bind:event="oninput" 
+                        type="datetime-local" />
+            </div>
+            <div>
+                <legend>@languageConstantsService.Constants.EndDateContext</legend>
+                <input @bind="newEndDate" @bind:event="oninput" type="datetime-local" />
+            </div>
+        </fieldset>
+        <fieldset class="d-flex flex-column gap-1 flex-grow-2 input-wrapper">
+            <div>
+                <legend>@languageConstantsService.Constants.CountryNameENContext</legend>
+                <select @bind="newCountry" 
+                        class="@((isEmpty && newCountry == "") ? "name-input-error" : "")"
+                        name="" id="">
+                    @foreach (Country country in countries ?? new Country[]{}) 
+                    {
+                        <option>@country.NameEn</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <legend>@languageConstantsService.Constants.FormatENContext</legend>
+                <select @bind="newFormat" 
+                        class="@((isEmpty && newFormat == "") ? "name-input name-input-error" : "name-input")"
+                        name="" id="">
+                    @foreach (Format format in formats ?? new Format[]{})
+                    {
+                        <option>@format.NameEn</option>
+                    } 
+                </select>
+            </div>
+            <div>
+                <legend>@languageConstantsService.Constants.LanguageENContext</legend>
+                <select @bind="newLanguage" 
+                        class="@((isEmpty && newLanguage == "") ? "name-input name-input-error" : "name-input")"
+                        name="" id="">
+                    @foreach (Language language in languages ?? new Language[]{})
+                    {
+                        <option>@language.NameEn</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <legend>@languageConstantsService.Constants.LimitAgeENContext</legend>
+                <select @bind="newLimitAge" 
+                        class="@((isEmpty && newLimitAge == "") ? "name-input name-input-error" : "name-input")"
+                        name="" id="">
+                    @foreach (LimitAge limitAge in limitAges ?? new LimitAge[]{})
+                    {
+                        <option>@limitAge.NameEn</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <legend>@languageConstantsService.Constants.GenreNameENContext</legend>
+                <select @bind="newGenre" sname="" id=""
+                        class="@((isEmpty && newGenre == "") ? "name-input name-input-error" : "name-input")">
+                    @foreach (Genre genre in genres ?? new Genre[]{})
+                    {
+                        <option>@genre.NameEn</option>
+                    }
+                </select>
+                <input @bind="newGenres" @bind:event="oninput" 
+                        class="@((isEmpty && newGenres == "") ? "name-input name-input-error" : "name-input")"
+                        type="text">
+            </div>
+            <div>
+                <legend>Status</legend>
+                <select @bind="newStatus" 
+                        class="@((isEmpty && newStatus == "") ? "name-input name-input-error" : "name-input")"
+                        name="" id="">
+                    <option>Upcoming</option>
+                    <option>Showing</option>
+                </select>
+            </div>
+            <div>
+                <legend>@languageConstantsService.Constants.ImgUrlContext</legend>
+                <input @bind="newImgUrl" @bind:event="oninput" 
+                        class="@((isEmpty && newImgUrl == "") ? "name-input name-input-error" : "name-input")"
+                        type="url">
+            </div>
+        </fieldset>
+        <fieldset class="d-flex flex-column gap-2 flex-grow-1 align-items-center input-wrapper">
+            <div style="width: 100%; height: 30%;">
+                <legend>@languageConstantsService.Constants.BriefVNContext</legend>
+                <textarea @bind="newBriefVN" @bind:event="oninput" 
+                          class="@((isEmpty && newBriefVN == "") ? "name-input name-input-error" : "name-input")"
+                          style="width: 100%; height: 100%;"></textarea>
+            </div>
+            <div style="width: 100%; height: 30%; margin-top: 20px;">
+                <legend>@languageConstantsService.Constants.BriefENContext</legend>
+                <textarea @bind="newBriefEN" @bind:event="oninput" 
+                          class="@((isEmpty && newBriefEN == "") ? "name-input name-input-error" : "name-input")"
+                          style="width: 100%; height: 100%;"></textarea>
+            </div>
+            <button @onclick="AddMovie" style="width: 30%; margin-top: 30px;">
+                Submit
+            </button>
+            <p style="color: @notificationTextColor;">@notification</p>
+        </fieldset>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public EventCallback CloseAddingMovieWindow {get; set;}
+
+    [Parameter]
+    public EventCallback ReloadData {get; set;}
+
+    private string newNameVN = "";
+
+    private string newNameEN = "";
+
+    private string newDuration = "";
+
+    private string newDirector = "";
+
+    private string newActor = "";
+
+    private string newCountry = "";
+
+    private string newFormat = "";
+
+    private string newLanguage = "";
+
+    private string newLimitAge = "";
+
+    private string newGenres = "";
+
+    private string _newGenre = "";
+
+    private string newGenre 
+    {
+        get => _newGenre;
+        set
+        {
+            _newGenre = value;
+            this.newGenres += _newGenre + ",";
+        }
+    }
+
+    private string newStatus = "";
+
+    private string newImgUrl = "";
+
+    private string newBriefVN = "";
+
+    private string newBriefEN = "";
+
+    private DateTime newReleasedDate;
+
+    private DateTime newEndDate;
+
+    private Country[]? countries;
+
+    private Format[]? formats;
+
+    private Language[]? languages;
+
+    private LimitAge[]? limitAges;
+
+    private Genre[]? genres;
+
+    private bool isEmpty = false;
+
+    private string notification = "";
+
+    private string notificationTextColor = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var countryState = pageStateManager.tableState["country"] as BasePageState<Country>;
+            if (countryState is null) return;
+            await countryState.LoadDataAsync(
+                $"{@APIConstants.BaseUrl}{@APIConstants.CountryAPIRoot}"
+            );
+            this.countries = countryState.entities;
+
+            var formatState = pageStateManager.tableState["format"] as BasePageState<Format>;
+            if (formatState is null) return;
+            await formatState.LoadDataAsync(
+                $"{@APIConstants.BaseUrl}{@APIConstants.FormatAPIRoot}"
+            );
+            this.formats = formatState.entities;
+
+            var languageState = pageStateManager.tableState["language"] as BasePageState<Language>;
+            if (languageState is null) return;
+            await languageState.LoadDataAsync(
+                $"{@APIConstants.BaseUrl}{@APIConstants.LanguageAPIRoot}"
+            );
+            this.languages = languageState.entities;
+
+            var limitAgeState = pageStateManager.tableState["limitAge"] as BasePageState<LimitAge>;
+            if (limitAgeState is null) return;
+            await limitAgeState.LoadDataAsync(
+                $"{@APIConstants.BaseUrl}{@APIConstants.LimitAgeAPIRoot}"
+            );
+            this.limitAges = limitAgeState.entities;
+
+            var genreState = pageStateManager.tableState["genre"] as BasePageState<Genre>;
+            if (genreState is null) return;
+            await genreState.LoadDataAsync(
+                $"{@APIConstants.BaseUrl}{@APIConstants.GenreAPIRoot}"
+            );
+            this.genres = genreState.entities;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+        }
+    }
+
+    public async Task AddMovie()
+    {
+        if (string.IsNullOrWhiteSpace(newNameVN) ||
+            string.IsNullOrWhiteSpace(newNameEN) ||
+            string.IsNullOrWhiteSpace(newDuration) ||
+            string.IsNullOrWhiteSpace(newDirector) ||
+            string.IsNullOrWhiteSpace(newActor) ||
+            string.IsNullOrWhiteSpace(newCountry) ||
+            string.IsNullOrWhiteSpace(newFormat) ||
+            string.IsNullOrWhiteSpace(newLanguage) ||
+            string.IsNullOrWhiteSpace(newLimitAge) ||
+            string.IsNullOrWhiteSpace(newStatus) ||
+            string.IsNullOrWhiteSpace(newImgUrl) ||
+            string.IsNullOrWhiteSpace(newBriefVN) ||
+            string.IsNullOrWhiteSpace(newBriefEN))
+        {
+            this.isEmpty = true;
+            this.notification = languageConstantsService.Constants.NameError;
+            this.notificationTextColor = @ColorConstants.NameInputNotificationError;
+            return;
+        }
+
+        if (!int.TryParse(newDuration, out _))
+        {
+            this.isEmpty = false;
+            this.notification = "Duration must be a number";
+            this.notificationTextColor = @ColorConstants.NameInputNotificationError;
+            return;
+        }
+
+        if (countries is null ||
+            formats is null || 
+            languages is null ||
+            limitAges is null ||
+            genres is null) 
+            return;
+
+        Country country = countries.Where(c => c.NameEn == newCountry).First();
+        Format format = formats.Where(f => f.NameEn == newFormat).First();
+        Language language = languages.Where(l => l.NameEn == newLanguage).First();
+        LimitAge limitAge = limitAges.Where(lm => lm.NameEn == newLimitAge).First();
+
+        Movie newMovie = new Movie();
+        newMovie.Country = country;
+        newMovie.Format = format;
+        newMovie.Language = language;
+        newMovie.LimitAge = limitAge;
+
+        newMovie.NameVn = newNameVN; 
+        newMovie.NameEn = newNameEN;
+        newMovie.Duration = int.Parse(newDuration);
+        newMovie.Director = newDirector;
+        newMovie.Actor = newActor;
+        newMovie.ReleasedDate = newReleasedDate;
+        newMovie.EndDate = newEndDate;
+        newMovie.Status = (newStatus == "Upcoming") ? 0 : 1;
+        newMovie.BriefVn = newBriefVN;
+        newMovie.BriefEn = newBriefEN;
+        newMovie.ImageUrl = newImgUrl;
+
+        if (newGenres is null) return;
+        string[] genreSplit = newGenres.Split(",");
+        for(int i = 0; i < genreSplit.Length - 1; i++)
+        {
+            var addedGenre = genres.Where(g => g.NameEn == genreSplit[i]).First();
+            newMovie.Genres.Add(addedGenre);
+        }
+
+        Console.WriteLine(JsonSerializer.Serialize(newMovie));
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync(
+                $"{@APIConstants.BaseUrl}{@APIConstants.MovieAPIRoot}",
+                newMovie
+            );
+
+            if (response.IsSuccessStatusCode)
+            {
+                this.notification = languageConstantsService.Constants.SuccessAddingNotification;
+                this.notificationTextColor = ColorConstants.NameInputNotificationSuccess;
+                this.isEmpty = false;
+            }
+
+            await ReloadData.InvokeAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            this.isEmpty = false;
+            this.notification = languageConstantsService.Constants.FailedAddingNotification;
+            this.notificationTextColor = ColorConstants.NameInputNotificationFailed;
+        }
+    }
+
+}

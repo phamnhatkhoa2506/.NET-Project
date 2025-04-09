@@ -1,0 +1,23 @@
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+
+@using Admin.Constants
+@using Admin.Components
+@using Admin.Models;
+
+@page "/format"
+
+<PageTitle>@languageConstantsService.Constants.FormatPageTitle</PageTitle>
+
+<h1>@languageConstantsService.Constants.FormatH1</h1>
+
+<p>@languageConstantsService.Constants.FormatP</p>
+
+<MainSpace 
+    T="Format"
+    BaseUrl="@fullBaseUrl"
+    EntityName="format" 
+/>
+
+@code {
+    private string fullBaseUrl = $"{APIConstants.BaseUrl}{APIConstants.FormatAPIRoot}";
+}

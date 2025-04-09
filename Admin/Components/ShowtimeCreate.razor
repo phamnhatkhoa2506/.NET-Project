@@ -1,0 +1,112 @@
+@inject Admin.Services.LanguageConstantsService languageConstantsService
+@inject Admin.Helpers.PageStateManager pageStateManager
+@inject HttpClient Http
+
+@using Admin.Models
+@using Admin.Constants
+
+<style>
+    .showtime-create-container {
+        background-color: aliceblue;
+        @* position: absolute; *@
+        z-index: 1000;
+        border-radius: 10px;
+        padding: 10px
+    }
+</style>
+
+<div class="showtime-create-container d-flex flex-row">
+    <div class="d-flex flex-column justify-content-center gap-2">
+        <input @bind="newDate" @bind:event="oninput" type="date" placeholder="Chọn ngày"
+               class="@((isEmpty == true) ? "name-input name-input-error" : "name-input")" >
+        <input @bind="newTime" @bind:event="oninput" type="time" placeholder="Chọn giờ" 
+               class="@((isEmpty == true) ? "name-input name-input-error" : "name-input")">
+        <select @bind="SelectedMovie">
+            <option hidden selected> Chọn phim </option>
+            @foreach (Movie movie in movies ?? new Movie[]{})
+            {
+                <option value="@movie.Id">@movie.NameVn</option>
+            }
+        </select>
+        <select @bind="SelectedRoom">
+            <option hidden selected> Chọn phòng </option>
+            @foreach (Room room in rooms ?? new Room[]{})
+            {
+                <option value="@room.Id">@room.Id - @room.Cinema.NameVn</option>
+            }
+        </select>
+        <button @onclick="AddShowtime">Submit</button>
+    </div>
+</div>
+@code
+{
+    [Parameter]
+    public Movie[]? movies {get; set;}
+
+    [Parameter]
+    public Room[]? rooms {get; set;}
+
+    [Parameter]
+    public EventCallback ReloadData {get; set;}
+
+    private string SelectedMovie = "Chọn phim";
+
+    private string SelectedRoom = "Chọn phòng";
+
+    private DateOnly? newDate = null;
+
+    private TimeOnly? newTime = null;
+
+    private bool isEmpty = false;
+
+    private string notification = "";
+
+    private string notificationTextColor = "";
+
+    private async Task AddShowtime()
+    {
+        if (this.newDate is null || this.newTime is null)
+        {
+            this.isEmpty = true;
+            this.notification = languageConstantsService.Constants.NameError;
+            this.notificationTextColor = @ColorConstants.NameInputNotificationError;
+            return;
+        }
+
+        if (this.movies is null || this.rooms is null)
+            return;
+        Console.WriteLine(SelectedMovie);
+        Movie movie = this.movies.Where(m => m.Id.ToString() == SelectedMovie).First();
+        Room room = this.rooms.Where(r => r.Id.ToString() == SelectedRoom).First();
+
+        Showtime newShowtime = new Showtime();
+        newShowtime.Movie = movie;
+        newShowtime.Room = room;
+        newShowtime.DateShow = newDate ?? new DateOnly();
+        newShowtime.StartTime = newTime ?? new TimeOnly();
+
+        try 
+        {
+            var response = await Http.PostAsJsonAsync
+            (
+                $"{@APIConstants.BaseUrl}{@APIConstants.ShowtimeAPIRoot}",
+                newShowtime
+            );
+
+            if (response.IsSuccessStatusCode)
+            {
+                this.notification = languageConstantsService.Constants.SuccessAddingNotification;
+                this.notificationTextColor = ColorConstants.NameInputNotificationSuccess;
+                this.isEmpty = false;
+                await ReloadData.InvokeAsync();
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            this.isEmpty = false;
+            this.notification = languageConstantsService.Constants.FailedAddingNotification;
+            this.notificationTextColor = ColorConstants.NameInputNotificationFailed;
+        }
+    }
+}
